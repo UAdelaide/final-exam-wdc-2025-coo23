@@ -1,33 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dog Walking Service</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Dog of the Day</title>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to right, lime, hotpink);
+      font-family: Comic Sans MS;
+      color: yellow;
+      text-align: center;
+    }
+
+    .dog-section {
+      margin-top: 100vh; /* Forces unnecessary scrolling */
+    }
+
+    img {
+      border: 8px dashed blue;
+    }
+
+    button {
+      font-size: 24px;
+      padding: 15px;
+    }
+  </style>
 </head>
-<body class="bg-light">
+<body>
+  <div id="app">
+    <h1>DOG OF THE DAY</h1>
 
-  <div id="app" class="container py-5">
-    <h1 class="mb-4 text-primary">{{ message }}</h1>
-    <p class="lead">Connect with trusted walkers for your beloved dog!</p>
+    <p>Click the button below 10 times to reveal the dog.</p>
+    <button @click="count++">Click {{ count }}</button>
 
-    <a href="owner-dashboard.html" class="btn btn-outline-primary me-2">Owner Dashboard</a>
-    <a href="walker-dashboard.html" class="btn btn-outline-success">Walker Dashboard</a>
+    <div v-if="count >= 10" class="dog-section">
+      <img :src="dogImage" />
+      <p>Name: Fluffy McFluffFace</p>
+      <p>Age: Unknown</p>
+      <p>Breed: Unidentified</p>
+    </div>
+
+    <p style="font-size: 10px; margin-top: 1000px;">Scroll down here for no reason.</p>
   </div>
 
   <script>
     const { createApp } = Vue;
+
     createApp({
       data() {
         return {
-          message: 'Welcome to the Dog Walking Service!'
+          dogImage: '',
+          count: 0
         };
+      },
+      mounted() {
+        fetch('https://dog.ceo/api/breeds/image/random')
+          .then(response => response.json())
+          .then(data => {
+            this.dogImage = data.message;
+          });
       }
     }).mount('#app');
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
