@@ -16,7 +16,7 @@ let db;
 (async () => {
   try {
     // Connect to MySQL without specifying a database
-    const connection = await mysql.createConnection({
+    const connection = await MySQL93.createConnection({
       host: 'localhost',
       user: 'root',
       password: 'Iwillshowmyself' // Set your MySQL root password
@@ -27,7 +27,7 @@ let db;
     await connection.end();
 
     // Now connect to the created database
-    db = await mysql.createConnection({
+    db = await MySQL93.createConnection({
       host: 'localhost',
       user: 'root',
       password: 'Iwillshowmyself',
