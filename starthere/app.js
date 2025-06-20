@@ -1,73 +1,81 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var mysql = require('mysql2/promise');
+const express = require('express');
+const session = require('express-session');
+const bodyParser = require('body-parser');
+const path = require('path');
+const pool = require('./db');
 
-var app = express();
+const app = express();
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(session({
+  secret: 'secret-key',
+  resave: false,
+  saveUninitialized: true
+}));
 
-let db;
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
 
-(async () => {
+app.set('view engine', 'ejs'); 
+app.set('views', path.join(__dirname, 'views'));
+
+// Login page
+app.get('/', (req, res) => {
+  res.render('login'); // views/login.ejs
+});
+
+// Handle login
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+
   try {
-    // Connect to MySQL without specifying a database
-    const connection = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '' // Set your MySQL root password
-    });
+    const [rows] = await pool.query(
+      'SELECT * FROM users WHERE username = ?',
+      [username]
+    );
 
-    // Create the database if it doesn't exist
-    await connection.query('CREATE DATABASE IF NOT EXISTS testdb');
-    await connection.end();
+    const user = rows[0];
 
-    // Now connect to the created database
-    db = await mysql.createConnection({
-      host: 'localhost',
-      user: 'root',
-      password: '',
-      database: 'testdb'
-    });
+    if (user && password === user.password_hash) {
+      req.session.user = {
+        id: user.user_id,
+        username: user.username,
+        role: user.role
+      };
 
-    // Create a table if it doesn't exist
-    await db.execute(`
-      CREATE TABLE IF NOT EXISTS books (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255),
-        author VARCHAR(255)
-      )
-    `);
-
-    // Insert data if table is empty
-    const [rows] = await db.execute('SELECT COUNT(*) AS count FROM books');
-    if (rows[0].count === 0) {
-      await db.execute(`
-        INSERT INTO books (title, author) VALUES
-        ('1984', 'George Orwell'),
-        ('To Kill a Mockingbird', 'Harper Lee'),
-        ('Brave New World', 'Aldous Huxley')
-      `);
+      if (user.role === 'owner') {
+        res.redirect('/owner/dashboard');
+      } else if (user.role === 'walker') {
+        res.redirect('/walker/dashboard');
+      } else {
+        res.status(400).send('Unknown role.');
+      }
+    } else {
+      res.status(401).send('Invalid username or password');
     }
-  } catch (err) {
-    console.error('Error setting up database. Ensure Mysql is running: service mysql start', err);
-  }
-})();
 
-// Route to return books as JSON
-app.get('/', async (req, res) => {
-  try {
-    const [books] = await db.execute('SELECT * FROM books');
-    res.json(books);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch books' });
+    console.error('Login error:', err);
+    res.status(500).send('Server error');
   }
 });
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Owner dashboard
+app.get('/owner/dashboard', (req, res) => {
+  if (req.session.user?.role === 'owner') {
+    res.send(`Welcome to Owner Dashboard, ${req.session.user.username}`);
+  } else {
+    res.redirect('/');
+  }
+});
 
-module.exports = app;
+// Walker dashboard
+app.get('/walker/dashboard', (req, res) => {
+  if (req.session.user?.role === 'walker') {
+    res.send(`Welcome to Walker Dashboard, ${req.session.user.username}`);
+  } else {
+    res.redirect('/');
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
