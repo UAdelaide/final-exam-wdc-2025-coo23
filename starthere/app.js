@@ -15,13 +15,11 @@ let db;
 
 (async () => {
   try {
-    console.log("Connecting to MySQL with password: Iwillshowmyself");
-
-
+    // Connect to MySQL without specifying a database
     const connection = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
-      password: 'Iwillshowmyself' // Set your MySQL root password
+      password: '' // Set your MySQL root password
     });
 
     // Create the database if it doesn't exist
@@ -32,7 +30,7 @@ let db;
     db = await mysql.createConnection({
       host: 'localhost',
       user: 'root',
-      password: 'Iwillshowmyself',
+      password: '',
       database: 'testdb'
     });
 
