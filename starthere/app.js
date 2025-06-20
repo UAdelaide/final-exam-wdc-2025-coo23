@@ -44,7 +44,7 @@ let db;
     `);
 
     // Insert data if table is empty
-    const [rows] = await db.execute('SELECT COUNT(*) AS count FROM books');
+    const [rows] = await MySQL93.execute('SELECT COUNT(*) AS count FROM books');
     if (rows[0].count === 0) {
       await db.execute(`
         INSERT INTO books (title, author) VALUES
@@ -61,7 +61,7 @@ let db;
 // Route to return books as JSON
 app.get('/', async (req, res) => {
   try {
-    const [books] = await db.execute('SELECT * FROM books');
+    const [books] = await MySQL93.execute('SELECT * FROM books');
     res.json(books);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch books' });
