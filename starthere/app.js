@@ -15,7 +15,8 @@ let db;
 
 (async () => {
   try {
-    console.log(' MySQL, Password: Iwillshowmyself');
+    console.log("Connecting to MySQL with password: Iwillshowmyself");
+
 
     const connection = await mysql.createConnection({
       host: 'localhost',
